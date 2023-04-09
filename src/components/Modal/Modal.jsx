@@ -1,54 +1,47 @@
-import { Component } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import css from './Modal.module.css';
 
 const modalRoot = document.querySelector('#modal-root');
 
-export class Modal extends Component {
-  // метод вызываем после того, как компонент был добавлен в DOM-дерево
-  componentDidMount() {
+export function Modal({ onClose, selectedImgCard }) {
+  useEffect(() => {
     // добавляем обработчик события нажатия клавиши на окне
-    window.addEventListener('keydown', this.handleKeyDown);
-  }
+    const handleKeyDown = event => {
+      // если нажата клавиша Escape
+      if (event.code === 'Escape') {
+        onClose();
+      }
+    };
 
-  // метод вызываем перед тем, как компонент будет удален из DOM-дерева
-  componentWillUnmount() {
+    window.addEventListener('keydown', handleKeyDown);
+
     // удаляем обработчик события нажатия клавиши на окне
-    window.removeEventListener('keydown', this.handleKeyDown);
-  }
-
-  // обработчик события нажатия клавиши на окне
-  handleKeyDown = event => {
-    // если нажата клавиша Escape
-    if (event.code === 'Escape') {
-      this.props.onClose();
-    }
-  };
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
 
   // обработчик клика по заднему фону модального окна
-  handleBackdropClick = event => {
+  const handleBackdropClick = event => {
     // если клик был по заднему фону, а не по самому окну
     if (event.target === event.currentTarget) {
-      this.props.onClose();
+      onClose();
     }
   };
 
-  render() {
-    const {
-      selectedImgCard: { largeImageURL, tags },
-    } = this.props;
+  const { largeImageURL, tags } = selectedImgCard;
 
-    // создаем портал для отображения модального окна
-    return createPortal(
-      <div className={css.Overlay} onClick={this.handleBackdropClick}>
-        <div className={css.Modal}>
-          <img src={largeImageURL} alt={tags} />
-        </div>
-      </div>,
-      modalRoot
-    );
-  }
+  // создаем портал для отображения модального окна
+  return createPortal(
+    <div className={css.Overlay} onClick={handleBackdropClick}>
+      <div className={css.Modal}>
+        <img src={largeImageURL} alt={tags} />
+      </div>
+    </div>,
+    modalRoot
+  );
 }
 
 Modal.propTypes = {
